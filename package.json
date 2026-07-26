@@ -1,0 +1,43 @@
+{
+  "name": "tradingagentsx-desktop",
+  "productName": "TradingAgentsX Desktop",
+  "description": "本機執行的 AI 交易分析工作站 — 金鑰不離開你的電腦",
+  "private": true,
+  "version": "0.1.0",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "node scripts/sync-stocks.mjs && vite",
+    "sync-stocks": "node scripts/sync-stocks.mjs",
+    "typecheck": "tsc -b",
+    "build": "node scripts/sync-stocks.mjs && tsc -b && vite build",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "build:backend": "bash scripts/build-backend.sh",
+    "dist:mac:standalone": "npm run build:backend && npm run build && electron-builder --mac",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.6.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.62.0",
+    "vite": "^8.1.1",
+    "vite-plugin-electron": "^1.1.0"
+  }
+}

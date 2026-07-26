@@ -1,0 +1,152 @@
+/* ==========================================================================
+   設計 token — 依循 DESIGN.md 的編輯雜誌式設計語言（ElevenLabs 風格）
+   --------------------------------------------------------------------------
+   暖調米白畫布 + 暖近黑墨色、髮絲線分隔、EB Garamond 襯線標題、Inter 內文、
+   pill 按鈕、柔和圓角、五色柔霧漸層作為唯一的「色彩氛圍」。
+   資料語意色（多空 / 買賣 / 即時）保留飽和度，因為那是資訊而非裝飾。
+   主題由 <html data-theme="light|dark"> 決定；幾何與字體不隨主題變動。
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* 幾何 — DESIGN.md 圓角尺度（編輯式更柔） */
+  --r-sm: 5px;
+  --r: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 9999px;
+
+  --titlebar-h: 40px;
+  --statusbar-h: 26px;
+  --sidebar-w: 216px;
+  --row-h: 34px;
+  --narrow: 980px;
+
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui,
+    'Noto Sans TC', sans-serif;
+  --font-display: 'EB Garamond', 'Songti TC', 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', 'Cascadia Mono', monospace;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 五色柔霧漸層 — 兩主題共用（作為氛圍點綴，非填色 / 非文字色） */
+  --orb-mint: #a7e5d3;
+  --orb-peach: #f4c5a8;
+  --orb-lavender: #c8b8e0;
+  --orb-sky: #a8c8e8;
+  --orb-rose: #e8b8c4;
+
+  color-scheme: light;
+}
+
+/* --------------------------------------------------------- 亮色（編輯式主調） */
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f5f5f4; /* 畫布：暖米白 */
+  --bg-raise: #faf9f7; /* canvas-soft：面板抬頭、次要帶 */
+  --surface: #ffffff; /* 純白卡片 */
+  --surface-2: #f3f1ee; /* surface-strong：徽章、圖示底盤 */
+  --surface-3: #ebe8e3;
+
+  --border: #e7e5e4; /* hairline */
+  --border-strong: #d6d3d1;
+  --border-hover: #c1bcb6;
+
+  --text: #292524; /* 暖近黑 */
+  --text-dim: #57534e;
+  --text-faint: #6f6862;
+  --text-disabled: #a8a29e;
+
+  /* CTA 用「墨色 pill」，非飽和品牌色（DESIGN.md 原則） */
+  --ink: #292524;
+  --ink-strong: #0c0a09;
+  --ink-fg: #ffffff;
+
+  /* 資料語意色 — 白底需壓暗才達 4.5:1 */
+  --accent: #0b7c45;
+  --accent-strong: #096639;
+  --accent-fg: #ffffff;
+  --accent-bg: rgba(11, 124, 69, 0.09);
+  --accent-line: rgba(11, 124, 69, 0.24);
+
+  --danger: #c8283c;
+  --danger-bg: rgba(200, 40, 60, 0.08);
+  --danger-line: rgba(200, 40, 60, 0.24);
+
+  --warn: #9a6206;
+  --warn-bg: rgba(154, 98, 6, 0.09);
+  --warn-line: rgba(154, 98, 6, 0.24);
+
+  --info: #1f5fd0;
+  --info-bg: rgba(31, 95, 208, 0.08);
+  --info-line: rgba(31, 95, 208, 0.24);
+
+  --violet: #6b3fcc;
+  --violet-bg: rgba(107, 63, 204, 0.08);
+  --violet-line: rgba(107, 63, 204, 0.24);
+
+  --scrollbar: #d6d3d1;
+  --scrollbar-hover: #b9b4ae;
+  --prose: #3a3531;
+  --shadow-pop: 0 10px 30px rgba(41, 37, 36, 0.12);
+  --shadow-card: 0 1px 2px rgba(41, 37, 36, 0.04);
+  --orb-alpha: 0.5;
+}
+
+/* ---------------------------------------------- 暗色（DESIGN.md 深色表面反相） */
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0c0a09; /* canvas-deep */
+  --bg-raise: #161311;
+  --surface: #1c1917; /* surface-dark-elevated */
+  --surface-2: #232019;
+  --surface-3: #2c2823;
+
+  --border: #2a2622;
+  --border-strong: #3a332d;
+  --border-hover: #4a423a;
+
+  --text: #f5f4f2;
+  --text-dim: #b4aca3;
+  --text-faint: #8f867d;
+  --text-disabled: #5c554d;
+
+  /* 暗色下 CTA 反相成暖白 pill（如 DESIGN.md 的 featured 反相） */
+  --ink: #f5f2ee;
+  --ink-strong: #ffffff;
+  --ink-fg: #1c1917;
+
+  --accent: #3fd68c;
+  --accent-strong: #52e29b;
+  --accent-fg: #04180e;
+  --accent-bg: rgba(63, 214, 140, 0.1);
+  --accent-line: rgba(63, 214, 140, 0.24);
+
+  --danger: #ff5c6e;
+  --danger-bg: rgba(255, 92, 110, 0.1);
+  --danger-line: rgba(255, 92, 110, 0.26);
+
+  --warn: #f5a524;
+  --warn-bg: rgba(245, 165, 36, 0.1);
+  --warn-line: rgba(245, 165, 36, 0.26);
+
+  --info: #6e9bff;
+  --info-bg: rgba(110, 155, 255, 0.1);
+  --info-line: rgba(110, 155, 255, 0.26);
+
+  --violet: #a88bff;
+  --violet-bg: rgba(168, 139, 255, 0.1);
+  --violet-line: rgba(168, 139, 255, 0.26);
+
+  --scrollbar: #3a332d;
+  --scrollbar-hover: #4c443b;
+  --prose: #ddd6cd;
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --orb-alpha: 0.22;
+}

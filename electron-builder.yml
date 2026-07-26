@@ -1,0 +1,63 @@
+appId: com.tradingagentsx.desktop
+productName: TradingAgentsX Desktop
+copyright: TradingAgentsX
+
+directories:
+  output: release
+  buildResources: build
+
+# 只打包產物與 package.json；node_modules 由 electron-builder 依 dependencies 自行處理
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+
+# 內建的 Python 後端執行環境（由 scripts/build-backend.sh 產生）。
+# 放進 App 的 Resources，backend.ts 會自動偵測並使用 —— 使用者不需 clone repo 或安裝 Python。
+# 若 resources/ 尚未建置，這兩項會被略過（打包出的 App 就會退回「找系統 Python」模式）。
+extraResources:
+  - from: resources/pybackend
+    to: pybackend
+  - from: resources/appsrc
+    to: appsrc
+
+asar: true
+
+mac:
+  category: public.app-category.finance
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  # 未簽章的版本在 macOS 會被 Gatekeeper 擋下。
+  # 要發佈給他人使用必須加入 Apple Developer 憑證並公證（notarize）。
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+dmg:
+  contents:
+    - x: 140
+      y: 200
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+
+win:
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+
+linux:
+  category: Office
+  target:
+    - AppImage
+    - deb
