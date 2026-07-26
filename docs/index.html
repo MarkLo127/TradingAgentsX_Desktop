@@ -575,14 +575,10 @@ td:first-child{color:var(--fg);font-family:var(--mono);font-size:.875rem;white-s
       </p>
 
       <div class="cta-row">
-        <!-- ════════════════════════════════════════════════════════════
-             下載連結：預設指向與本頁同層的 DMG。
-             部署到 GitHub Pages 時，改成 Release 的資產網址，例如
-             https://github.com/MarkLo127/TradingAgentsX_Desktop/releases/download/v0.1.0/...
-             ════════════════════════════════════════════════════════════ -->
-        <a class="btn btn-primary"
-           href="TradingAgentsX%20Desktop-0.1.0-arm64.dmg"
-           download>
+        <!-- 下載指向 GitHub Release 資產（v0.1.0）。
+             安裝檔不放在版本庫裡：GitHub 對 repo 內單一檔案的硬限制是 100 MB。
+             跨網域連結不加 download 屬性 —— 瀏覽器會忽略它，GitHub 已送 Content-Disposition。 -->
+        <a class="btn btn-primary" href="https://github.com/MarkLo127/TradingAgentsX_Desktop/releases/download/v0.1.0/TradingAgentsX.Desktop-0.1.0-arm64.dmg">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M4 21h16"></path>
           </svg>
@@ -685,13 +681,13 @@ td:first-child{color:var(--fg);font-family:var(--mono);font-size:.875rem;white-s
             在終端機執行 <span class="mono">shasum -a 256 &lt;檔案&gt;</span>，比對是否等於：
           </p>
           <div class="code">
-            <button class="copy" type="button" data-copy="1c4c7e36fd28d6d272df787a8a37465835d6dbcb1b14295a3071cc6d54fdefd4"
+            <button class="copy" type="button" data-copy="18024d879755d4ed72ed219804e67796b6ac463d69d8ba05d6a1e02f1bc7033b"
                     aria-label="複製 SHA-256 校驗碼" data-en-aria-label="Copy SHA-256 checksum">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path>
               </svg>
             </button>
-            <pre><code>1c4c7e36fd28d6d272df787a8a37465835d6dbcb1b14295a3071cc6d54fdefd4</code></pre>
+            <pre><code>18024d879755d4ed72ed219804e67796b6ac463d69d8ba05d6a1e02f1bc7033b</code></pre>
           </div>
         </div>
       </div>
@@ -963,7 +959,7 @@ td:first-child{color:var(--fg);font-family:var(--mono);font-size:.875rem;white-s
       <h2 id="end-h" class="h2" data-en="Ready when you are">準備好了就開始</h2>
       <p class="lede" data-en="Download it, drag it into Applications, paste in one API key — that's enough to run your first analysis.">下載、拖進「應用程式」、填一組 API 金鑰，就可以跑第一份分析。</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="TradingAgentsX%20Desktop-0.1.0-arm64.dmg" download>
+        <a class="btn btn-primary" href="https://github.com/MarkLo127/TradingAgentsX_Desktop/releases/download/v0.1.0/TradingAgentsX.Desktop-0.1.0-arm64.dmg">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M4 21h16"></path>
           </svg>
