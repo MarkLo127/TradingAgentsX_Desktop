@@ -8,27 +8,40 @@
 
 ## 快速開始
 
-前置：這個 App 會啟動 repo 根目錄的 Python 後端，所以需要先把後端裝好。
+這個 repo 只有介面外殼；跑分析的 Python 後端在
+[TradingAgentsX](https://github.com/MarkLo127/TradingAgentsX)，是獨立的 repo。
+**打包不需要你自己準備它** —— `build-backend.sh` 會自動取得（見
+[後端原始碼從哪來](#後端原始碼從哪來)）。
+
+只想產出可散佈的 App：
 
 ```bash
-# 在 repo 根目錄
+bun install                     # 或 npm install
+bun run dist:mac:standalone     # 產生 .dmg（見下方「發佈」的注意事項）
+```
+
+要改前端 code：
+
+```bash
+bun install
+bun run dev          # Vite dev server + Electron，改 code 會熱更新
+bun run build        # 型別檢查 + 產出 dist/ 與 dist-electron/
+```
+
+`bun run dev` 起的 App 需要一個能連的後端。最省事的方式是先跑一次
+`bun run build:backend`，再用內建 bundle 開發：
+
+```bash
+TAX_BUNDLE_DIR=$PWD/resources bun run dev
+```
+
+若你要同時改 Python 後端，就 clone TradingAgentsX 放在這個 repo 的旁邊，
+自己裝好環境並手動啟動後端（App 的「external」模式會連上去）：
+
+```bash
+# 在 TradingAgentsX repo 根目錄
 conda activate tradingagents
 pip install -e . && pip install -r backend/requirements.txt
-```
-
-然後：
-
-```bash
-cd TradingAgentsX_Desktop
-bun install          # 或 npm install
-bun run dev          # Vite dev server + Electron，改 code 會熱更新
-```
-
-打包：
-
-```bash
-bun run build        # 型別檢查 + 產出 dist/ 與 dist-electron/
-bun run dist:mac:standalone     # 產生 .dmg（見下方「發佈」的注意事項）
 ```
 
 ## 獨立發佈（使用者不需 git / Python）
@@ -51,6 +64,29 @@ bun run dist:mac                                     # 打包，內建後端會�
 沒有內建執行環境時（例如沒跑 `build-backend.sh` 就打包），App 會退回「auto」模式去找系統
 Python + repo，或用「external」模式連你自己起的後端。開發時可用
 `TAX_BUNDLE_DIR=$PWD/resources bun run dev` 直接測試內建 bundle。
+
+### 後端原始碼從哪來
+
+`backend/` 與 `tradingagents/` 屬於 [TradingAgentsX](https://github.com/MarkLo127/TradingAgentsX)，
+**不複製進這個 repo**（那邊更新頻繁，複製只會讓兩份逐漸分歧）。
+`build-backend.sh` 依序尋找，用第一個找得到的：
+
+| 順序 | 位置 | 用途 |
+| --- | --- | --- |
+| 1 | `$TAX_REPO` | 明確指定路徑 |
+| 2 | `../`、`../TradingAgentsX` | 兩個 repo 並列（或 desktop 巢狀在 repo 內）時的本機開發 |
+| 3 | `.cache/TradingAgentsX-<ref>` | 先前下載的快取 |
+| 4 | GitHub tarball | 以上都沒有時自動下載 |
+
+下載的版本 pin 在 [`.tax-version`](.tax-version)（一個 commit SHA），所以建置是可重現的。
+要換後端版本就改那個檔案，或臨時覆寫：
+
+```bash
+TAX_REF=main bun run build:backend          # 取最新
+TAX_REPO=/path/to/TradingAgentsX bun run build:backend   # 用本機某份
+```
+
+本機找得到 repo 時**不會**下載，也不會建 `.cache/` —— 你改 Python 後直接重跑即可生效。
 
 **精簡版 vs 完整版（embedding）**：
 - **精簡版（預設，約 1GB）** 不含 `torch`。本機 embedding 會自動改用 **ChromaDB 內建的 ONNX

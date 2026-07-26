@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-en="TradingAgentsX Desktop — run the full analysis on your own machine">TradingAgentsX Desktop — 在自己的電腦上跑完整分析流程</title>
+<meta name="description" content="12 位 AI 代理人的多空辯論與風險評估，全部在你的 Mac 上執行。API 金鑰存進系統鑰匙圈，報告存在你自己的磁碟。僅支援 Apple Silicon。"
+      data-en="12 AI agents debate both sides and weigh risk — entirely on your Mac. API keys live in the system keychain; reports stay on your own disk. Apple Silicon only.">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="TradingAgentsX Desktop">
+<meta property="og:description" content="12 位 AI 代理人的多空辯論與風險評估，全部在你的 Mac 上執行。僅支援 Apple Silicon。">
+<meta property="og:image" content="assets/1.webp">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script>
+/* 在首次繪製前套用主題偏好，避免閃一下錯誤配色（FOUC）。 */
+(function(){
+  try {
+    var t = localStorage.getItem('tax-theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    var l = localStorage.getItem('tax-lang');
+    if (l === 'en') document.documentElement.setAttribute('data-lang', 'en');
+  } catch (e) { /* 隱私模式下 localStorage 可能拋錯，忽略即可 */ }
+})();
+</script>
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   Design tokens
+   亮色為預設；系統偏好暗色時切換；data-theme 可明確覆寫兩個方向。
+   所有文字色都經過量測：於該主題的三種表面上皆 >= 4.5:1。
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#F8FAFC;
+  --surface:#FFFFFF;
+  --surface-2:#F1F5F9;
+  --border:#E2E8F0;
+  --border-strong:#64748B;   /* 互動元件邊框，4.55:1 */
+  --fg:#0F172A;              /* 16.3:1 */
+  --fg-muted:#475569;        /* 6.92:1 */
+  --fg-subtle:#5B6A80;       /* 5.02:1 */
+
+  --accent:#22C55E;          /* 品牌綠：背景／邊框用 */
+  --accent-text:#15803D;     /* 綠色文字用，亮底需壓深，4.58:1 */
+  --accent-hover:#16A34A;
+  --on-accent:#06210F;       /* 綠底上的文字，7.48:1 */
+  --accent-soft:rgba(34,197,94,.10);
+  --accent-line:rgba(21,128,61,.30);
+
+  --warn:#B45309;
+  --warn-soft:rgba(245,158,11,.10);
+  --warn-line:rgba(180,83,9,.30);
+
+  --code-bg:#F1F5F9;
+  --code-fg:#334155;
+  --glow:rgba(34,197,94,.09);
+  --shadow-frame:0 14px 40px -18px rgba(15,23,42,.25);
+  --nav-bg:rgba(248,250,252,.85);
+
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC','Hiragino Sans',
+         'Microsoft JhengHei',system-ui,sans-serif;
+
+  --s1:.25rem; --s2:.5rem; --s3:.75rem; --s4:1rem; --s6:1.5rem;
+  --s8:2rem; --s12:3rem; --s16:4rem; --s24:6rem;
+
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --maxw:1120px;
+  --z-nav:40;
+}
+
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#0F172A;
+    --surface:#1E293B;
+    --surface-2:#272F42;
+    --border:#334155;
+    --border-strong:#64748B;
+    --fg:#F8FAFC;
+    --fg-muted:#B4C0D0;
+    --fg-subtle:#8B9BB4;
+
+    --accent:#22C55E;
+    --accent-text:#22C55E;   /* 暗底可直接用亮綠，5.86:1 */
+    --accent-hover:#4ADE80;
+    --on-accent:#06210F;
+    --accent-soft:rgba(34,197,94,.10);
+    --accent-line:rgba(34,197,94,.28);
+
+    --warn:#F59E0B;
+    --warn-soft:rgba(245,158,11,.07);
+    --warn-line:rgba(245,158,11,.35);
+
+    --code-bg:#0B1220;
+    --code-fg:#CBD5E1;
+    --glow:rgba(34,197,94,.10);
+    --shadow-frame:0 18px 50px -18px rgba(0,0,0,.7);
+    --nav-bg:rgba(15,23,42,.82);
+  }
+}
+
+/* 明確選擇暗色 —— 特異性高於 :root，兩個方向都能贏 */
+:root[data-theme="dark"]{
+  --bg:#0F172A;
+  --surface:#1E293B;
+  --surface-2:#272F42;
+  --border:#334155;
+  --border-strong:#64748B;
+  --fg:#F8FAFC;
+  --fg-muted:#B4C0D0;
+  --fg-subtle:#8B9BB4;
+  --accent:#22C55E;
+  --accent-text:#22C55E;
+  --accent-hover:#4ADE80;
+  --on-accent:#06210F;
+  --accent-soft:rgba(34,197,94,.10);
+  --accent-line:rgba(34,197,94,.28);
+  --warn:#F59E0B;
+  --warn-soft:rgba(245,158,11,.07);
+  --warn-line:rgba(245,158,11,.35);
+  --code-bg:#0B1220;
+  --code-fg:#CBD5E1;
+  --glow:rgba(34,197,94,.10);
+  --shadow-frame:0 18px 50px -18px rgba(0,0,0,.7);
+  --nav-bg:rgba(15,23,42,.82);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--sans);
+  font-size:1rem;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';
+  position:fixed; inset:0 0 auto 0; height:60vh;
+  background:radial-gradient(ellipse 70% 100% at 50% 0%,var(--glow),transparent 70%);
+  pointer-events:none; z-index:0;
+}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--s6);position:relative;z-index:1}
+@media (max-width:600px){.wrap{padding:0 var(--s4)}}
+
+h1,h2,h3{font-family:var(--mono);font-weight:700;line-height:1.25;letter-spacing:-.02em;margin:0}
+p{margin:0}
+
+a{color:var(--accent-text);text-decoration:none}
+a:hover{text-decoration:underline}
+
+:where(a,button,summary,[tabindex]):focus-visible{
+  outline:2px solid var(--accent-text);
+  outline-offset:3px;
+  border-radius:var(--r-sm);
+}
+
+.mono{font-family:var(--mono)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ── i18n：預設顯示中文；切到英文時交換文字（見頁尾 script） ── */
+:root[data-lang="en"] .zh-only{display:none}
+.en-only{display:none}
+:root[data-lang="en"] .en-only{display:inline}
+
+/* ── Skip link ───────────────────────────────────────────── */
+.skip{
+  position:absolute;left:var(--s4);top:-100px;z-index:100;
+  background:var(--accent);color:var(--on-accent);font-family:var(--mono);font-weight:700;
+  padding:var(--s3) var(--s4);border-radius:var(--r-sm);transition:top .15s ease-out;
+}
+.skip:focus{top:var(--s4);text-decoration:none}
+
+/* ── Nav ─────────────────────────────────────────────────── */
+.nav{
+  position:sticky;top:0;z-index:var(--z-nav);
+  background:var(--nav-bg);
+  -webkit-backdrop-filter:blur(12px);   /* Safari 需要前綴，本頁主要受眾就是 Safari */
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-in{
+  max-width:var(--maxw);margin:0 auto;padding:var(--s3) var(--s6);
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+}
+@media (max-width:600px){.nav-in{padding:var(--s3) var(--s4)}}
+.brand{
+  display:flex;align-items:center;gap:var(--s3);
+  font-family:var(--mono);font-weight:700;font-size:.9375rem;color:var(--fg);
+  min-height:44px;
+  flex:0 1 auto;min-width:0;   /* 允許收縮，否則品名會把 nav 撐爆視窗 */
+}
+.brand:hover{text-decoration:none}
+.brand-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-mark{
+  width:28px;height:28px;border-radius:7px;flex:0 0 auto;
+  background:linear-gradient(145deg,#6366F1,#8B5CF6);
+  display:grid;place-items:center;color:#fff;
+}
+.brand-mark svg{width:17px;height:17px}
+
+.nav-right{display:flex;align-items:center;gap:var(--s3);flex:0 0 auto}
+.nav-links{display:flex;align-items:center;gap:var(--s2)}
+.nav-link{
+  display:inline-flex;align-items:center;gap:var(--s2);
+  min-height:44px;padding:0 var(--s3);border-radius:var(--r-sm);
+  color:var(--fg-muted);font-family:var(--mono);font-size:.8125rem;
+  transition:color .15s ease-out,background .15s ease-out;
+}
+.nav-link:hover{color:var(--fg);background:var(--surface-2);text-decoration:none}
+.nav-link svg{width:16px;height:16px;flex:0 0 auto}
+
+/* ── 主題／語言控制 ─────────────────────────────────────── */
+.ctl{display:flex;align-items:center;gap:var(--s2)}
+.seg{
+  display:flex;align-items:center;gap:2px;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:2px;
+}
+.seg button{
+  display:grid;place-items:center;
+  width:32px;height:30px;padding:0;
+  background:transparent;border:0;border-radius:4px;cursor:pointer;
+  color:var(--fg-subtle);
+  transition:color .15s ease-out,background .15s ease-out;
+}
+.seg button:hover{color:var(--fg)}
+.seg button svg{width:15px;height:15px}
+.seg button[aria-pressed="true"]{
+  background:var(--surface);color:var(--accent-text);
+  box-shadow:0 1px 2px rgba(15,23,42,.10);
+}
+.lang{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);
+  height:34px;padding:0 var(--s3);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--fg-muted);font-family:var(--mono);font-size:.75rem;font-weight:700;
+  cursor:pointer;
+  transition:color .15s ease-out,border-color .15s ease-out;
+}
+.lang:hover{color:var(--fg);border-color:var(--border-strong)}
+.lang svg{width:14px;height:14px}
+
+/* 窄螢幕逐步讓路給控制項（控制項優先，章節連結可由頁內導覽取代） */
+@media (max-width:900px){.nav-link span{display:none}}
+@media (max-width:700px){.nav-links{display:none}}
+@media (max-width:430px){.brand-suffix{display:none}}
+@media (max-width:360px){.brand-name{display:none}}
+
+/* ── Hero ────────────────────────────────────────────────── */
+.hero{padding:var(--s24) 0 var(--s16);text-align:center}
+@media (max-width:768px){.hero{padding:var(--s16) 0 var(--s12)}}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:var(--s2);
+  font-family:var(--mono);font-size:.75rem;font-weight:500;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--accent-text);
+  background:var(--accent-soft);
+  border:1px solid var(--accent-line);
+  padding:var(--s2) var(--s3);border-radius:999px;margin-bottom:var(--s6);
+}
+.eyebrow svg{width:14px;height:14px}
+
+.hero h1{font-size:clamp(2rem,6vw,3.75rem);margin-bottom:var(--s6)}
+.hero h1 em{font-style:normal;color:var(--accent-text)}
+
+.lede{
+  font-size:clamp(1rem,2.2vw,1.1875rem);color:var(--fg-muted);
+  max-width:37em;margin:0 auto var(--s8);
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.cta-row{
+  display:flex;flex-wrap:wrap;gap:var(--s4);justify-content:center;align-items:center;
+  margin-bottom:var(--s4);
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--s3);
+  min-height:52px;padding:0 var(--s8);
+  font-family:var(--mono);font-size:1rem;font-weight:700;
+  border-radius:var(--r-md);border:1px solid transparent;cursor:pointer;
+  transition:background .15s ease-out,border-color .15s ease-out,color .15s ease-out;
+}
+.btn:hover{text-decoration:none}
+.btn svg{width:19px;height:19px;flex:0 0 auto}
+
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{background:var(--accent-hover)}
+
+.btn-ghost{background:transparent;color:var(--fg);border-color:var(--border-strong)}
+.btn-ghost:hover{background:var(--surface-2)}
+
+.dl-meta{
+  font-family:var(--mono);font-size:.8125rem;color:var(--fg-subtle);
+  display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);justify-content:center;
+}
+.dl-meta b{color:var(--fg-muted);font-weight:500}
+
+/* ── Callouts ────────────────────────────────────────────── */
+.callout{
+  display:flex;gap:var(--s4);text-align:left;
+  border-radius:var(--r-lg);padding:var(--s6);
+  border:1px solid var(--border);background:var(--surface);
+}
+.callout > svg{width:22px;height:22px;flex:0 0 auto;margin-top:3px}
+.callout h3{font-size:1rem;margin-bottom:var(--s2)}
+.callout p{color:var(--fg-muted);font-size:.9375rem}
+.callout p + p{margin-top:var(--s3)}
+.callout--warn{border-color:var(--warn-line);background:var(--warn-soft)}
+.callout--warn > svg{color:var(--warn)}
+.callout--info{border-color:var(--accent-line);background:var(--accent-soft)}
+.callout--info > svg{color:var(--accent-text)}
+@media (max-width:600px){
+  .callout{flex-direction:column;gap:var(--s3);padding:var(--s4)}
+}
+
+/* ── Sections ────────────────────────────────────────────── */
+/* 相鄰兩個 section 的 padding 會相加，s24 上下會形成 192px 的空隙 —— 太大。
+   改用 s16，相鄰間距 128px。 */
+.section{padding:var(--s16) 0}
+@media (max-width:768px){.section{padding:var(--s12) 0}}
+.section-head{max-width:44em;margin-bottom:var(--s8)}
+.section-head h2{font-size:clamp(1.5rem,4vw,2.25rem);margin-bottom:var(--s4)}
+.section-head p{color:var(--fg-muted);font-size:1.0625rem}
+.kicker{
+  font-family:var(--mono);font-size:.75rem;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent-text);display:block;margin-bottom:var(--s3);
+}
+
+/* ── Shots ───────────────────────────────────────────────── */
+/* minmax(0,1fr) 而非隱含的 auto：auto 欄不能小於項目的 min-content，
+   會讓欄寬撐成 377px 而非讓內容換行（grid blowout）。 */
+.shots{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s12)}
+.shot{min-width:0}
+.shot figure{margin:0}
+.shot-frame{
+  border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;
+  background:var(--surface);box-shadow:var(--shadow-frame);
+}
+.shot-bar{
+  display:flex;align-items:center;gap:var(--s2);
+  padding:var(--s3) var(--s4);border-bottom:1px solid var(--border);
+  background:var(--surface-2);
+}
+.shot-bar i{width:11px;height:11px;border-radius:50%;background:var(--border-strong);flex:0 0 auto;opacity:.55}
+.shot-bar span{
+  font-family:var(--mono);font-size:.75rem;color:var(--fg-subtle);
+  margin-left:var(--s2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.shot-frame img{display:block;width:100%;height:auto;background:#fff}
+.shot figcaption{margin-top:var(--s4);color:var(--fg-muted);font-size:.9375rem;max-width:52em}
+.shot figcaption b{color:var(--fg);font-family:var(--mono);font-weight:500;font-size:.875rem}
+
+/* ── Feature grid ────────────────────────────────────────── */
+.grid{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{
+  border:1px solid var(--border);border-radius:var(--r-lg);
+  background:var(--surface);padding:var(--s6);min-width:0;
+  transition:border-color .15s ease-out;
+}
+.card:hover{border-color:var(--border-strong)}
+.card-ico{
+  width:38px;height:38px;border-radius:9px;display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--accent-text);margin-bottom:var(--s4);
+}
+.card-ico svg{width:20px;height:20px}
+.card h3{font-size:1rem;margin-bottom:var(--s2)}
+.card p{color:var(--fg-muted);font-size:.9375rem}
+
+/* ── Pipeline ────────────────────────────────────────────── */
+.pipe{display:grid;gap:var(--s3)}
+.pipe-row{
+  display:flex;gap:var(--s4);align-items:flex-start;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--surface);padding:var(--s4) var(--s6);
+}
+.pipe-n{
+  font-family:var(--mono);font-size:.75rem;font-weight:700;
+  width:26px;height:26px;flex:0 0 auto;border-radius:var(--r-sm);
+  display:grid;place-items:center;
+  background:var(--surface-2);color:var(--accent-text);border:1px solid var(--border);
+}
+.pipe-row > div{min-width:0}
+.pipe-row h3{font-size:.9375rem;margin-bottom:var(--s1)}
+.pipe-row p{color:var(--fg-muted);font-size:.875rem}
+.pipe-row .roles{
+  font-family:var(--mono);font-size:.8125rem;color:var(--fg-subtle);margin-top:var(--s2);
+}
+@media (max-width:600px){.pipe-row{padding:var(--s4);flex-direction:column;gap:var(--s3)}}
+
+/* ── Table ───────────────────────────────────────────────── */
+.table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-lg)}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.9375rem}
+th,td{padding:var(--s4) var(--s6);text-align:left;border-bottom:1px solid var(--border)}
+tbody tr:last-child td{border-bottom:0}
+th{
+  font-family:var(--mono);font-size:.8125rem;font-weight:500;color:var(--fg-muted);
+  background:var(--surface-2);white-space:nowrap;
+}
+td{color:var(--fg-muted);background:var(--surface)}
+td:first-child{color:var(--fg);font-family:var(--mono);font-size:.875rem;white-space:nowrap}
+
+/* ── Code block + copy ──────────────────────────────────── */
+.code{
+  position:relative;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--code-bg);margin-top:var(--s4);
+}
+.code pre{
+  margin:0;padding:var(--s4) 56px var(--s4) var(--s4);
+  overflow-x:auto;font-family:var(--mono);font-size:.8125rem;line-height:1.7;
+  color:var(--code-fg);
+}
+.code code{white-space:pre}
+.copy{
+  position:absolute;top:var(--s2);right:var(--s2);
+  width:40px;height:40px;display:grid;place-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--fg-muted);cursor:pointer;
+  transition:color .15s ease-out,border-color .15s ease-out;
+}
+.copy:hover{color:var(--fg);border-color:var(--border-strong)}
+.copy svg{width:16px;height:16px}
+.copy[data-done="1"]{color:var(--accent-text);border-color:var(--accent-line)}
+
+/* ── Steps ──────────────────────────────────────────────── */
+.steps{margin:var(--s6) 0 0;padding-left:1.4em;color:var(--fg-muted);font-size:.9375rem}
+.steps li{margin-bottom:var(--s3)}
+.steps li::marker{font-family:var(--mono);color:var(--accent-text)}
+.steps kbd{
+  font-family:var(--mono);font-size:.8125rem;color:var(--fg);
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:4px;padding:1px 6px;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.foot{border-top:1px solid var(--border);padding:var(--s12) 0;margin-top:var(--s12)}
+.foot-in{display:flex;flex-wrap:wrap;gap:var(--s6);justify-content:space-between;align-items:flex-start}
+.foot p{font-size:.875rem;color:var(--fg-subtle);max-width:46em}
+.foot-links{display:flex;flex-wrap:wrap;gap:var(--s4);font-family:var(--mono);font-size:.8125rem}
+.foot-links a{color:var(--fg-muted)}
+.foot-links a:hover{color:var(--accent-text)}
+
+.disclaimer{
+  border:1px solid var(--border);border-left:3px solid var(--warn);
+  border-radius:var(--r-sm);background:var(--surface);
+  padding:var(--s4) var(--s6);margin-bottom:var(--s8);
+}
+.disclaimer p{font-size:.875rem;color:var(--fg-muted)}
+.disclaimer b{color:var(--fg);font-family:var(--mono);font-weight:500}
+
+#os-notice[hidden]{display:none}
+#os-notice{margin-top:var(--s6)}
+
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+
+/* ── Utilities ───────────────────────────────────────────── */
+.section--tight{padding-top:0;padding-bottom:var(--s12)}
+.section--center{text-align:center}
+.mt-8{margin-top:var(--s8)}
+.h2{font-size:clamp(1.5rem,4vw,2.25rem);margin-bottom:var(--s6)}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main" data-en="Skip to main content">跳到主要內容</a>
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline>
+        </svg>
+      </span>
+      <span class="brand-name">TradingAgentsX<span class="brand-suffix">&nbsp;Desktop</span></span>
+    </a>
+
+    <div class="nav-right">
+      <div class="nav-links">
+        <a class="nav-link" href="#shots">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path>
+          </svg>
+          <span data-en="Screens">畫面</span>
+        </a>
+        <a class="nav-link" href="#install">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2v13"></path><path d="m7 10 5 5 5-5"></path><path d="M3 21h18"></path>
+          </svg>
+          <span data-en="Install">安裝</span>
+        </a>
+        <a class="nav-link" href="https://github.com/MarkLo127/TradingAgentsX_Desktop">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.55v-1.94c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 23.5 12A11.5 11.5 0 0 0 12 .5Z"/>
+          </svg>
+          <span data-en="Source">原始碼</span>
+        </a>
+      </div>
+
+      <div class="ctl">
+        <div class="seg" role="group" aria-label="主題" data-en-aria-label="Theme">
+          <button type="button" data-theme-set="system" aria-pressed="true"
+                  title="跟隨系統" data-en-title="Follow system">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path>
+            </svg>
+            <span class="sr-only" data-en="Follow system">跟隨系統</span>
+          </button>
+          <button type="button" data-theme-set="light" aria-pressed="false"
+                  title="亮色" data-en-title="Light">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path>
+              <path d="m4.9 4.9 1.4 1.4"></path><path d="m17.7 17.7 1.4 1.4"></path><path d="M2 12h2"></path>
+              <path d="M20 12h2"></path><path d="m4.9 19.1 1.4-1.4"></path><path d="m17.7 6.3 1.4-1.4"></path>
+            </svg>
+            <span class="sr-only" data-en="Light">亮色</span>
+          </button>
+          <button type="button" data-theme-set="dark" aria-pressed="false"
+                  title="暗色" data-en-title="Dark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+            </svg>
+            <span class="sr-only" data-en="Dark">暗色</span>
+          </button>
+        </div>
+
+        <button class="lang" type="button" id="lang-toggle"
+                aria-label="切換為英文" data-en-aria-label="Switch to Chinese">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path>
+            <path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"></path>
+          </svg>
+          <span id="lang-label">EN</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div id="top"></div>
+
+<main id="main">
+
+  <!-- ══════════════ HERO ══════════════ -->
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M6 8h4"></path><path d="M6 12h2"></path>
+        </svg>
+        <span data-en="macOS · Apple Silicon only">僅支援 macOS · Apple Silicon</span>
+      </span>
+
+      <h1 data-en-html="12 AI agents debating<br>on <em>your own machine</em>">12 位 AI 代理人<br>在<em>你自己的電腦</em>上辯論</h1>
+
+      <p class="lede" data-en="Analysts gather evidence in parallel, bull and bear researchers argue head-on, three risk stances check each other, and a trader condenses it all into BUY / SELL / HOLD. The whole pipeline runs on your Mac — API keys go into the system keychain, reports onto your own disk.">
+        分析師平行蒐證、多空研究員正面交鋒、三派風險立場互相制衡，最後由交易員收斂成
+        BUY / SELL / HOLD。整段流程跑在你的 Mac 上，API 金鑰存進系統鑰匙圈，報告寫進你自己的磁碟。
+      </p>
+
+      <div class="cta-row">
+        <!-- ════════════════════════════════════════════════════════════
+             下載連結：預設指向與本頁同層的 DMG。
+             部署到 GitHub Pages 時，改成 Release 的資產網址，例如
+             https://github.com/MarkLo127/TradingAgentsX_Desktop/releases/download/v0.1.0/...
+             ════════════════════════════════════════════════════════════ -->
+        <a class="btn btn-primary"
+           href="TradingAgentsX%20Desktop-0.1.0-arm64.dmg"
+           download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M4 21h16"></path>
+          </svg>
+          <span data-en="Download for Apple Silicon">下載 for Apple Silicon</span>
+        </a>
+        <a class="btn btn-ghost" href="#install">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>
+          </svg>
+          <span data-en="Read before first launch">首次開啟必讀</span>
+        </a>
+      </div>
+
+      <p class="dl-meta tnum">
+        <span data-en-html="<b>Version</b> 0.1.0"><b>版本</b> 0.1.0</span>
+        <span data-en-html="<b>Size</b> 369&nbsp;MB"><b>大小</b> 369&nbsp;MB</span>
+        <span data-en-html="<b>Arch</b> arm64"><b>架構</b> arm64</span>
+        <span data-en-html="<b>Requires</b> macOS 11+"><b>需求</b> macOS 11+</span>
+      </p>
+
+      <div id="os-notice" hidden>
+        <div class="callout callout--warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+            <path d="M12 9v4"></path><path d="M12 17h.01"></path>
+          </svg>
+          <div>
+            <h3 data-en="Your system doesn't look like macOS">你目前的系統看起來不是 macOS</h3>
+            <p data-en-html="This build ships only a macOS (Apple Silicon) installer. Windows and Linux builds aren't released yet, though the project supports those platforms — you can build from <a href=&quot;https://github.com/MarkLo127/TradingAgentsX_Desktop&quot;>source</a>.">這個版本只提供 macOS（Apple Silicon）安裝檔。Windows 與 Linux 版本尚未發佈，
+               但專案本身支援這些平台 —— 可以自行從<a href="https://github.com/MarkLo127/TradingAgentsX_Desktop">原始碼</a>建置。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════ 相容性 ══════════════ -->
+  <section class="section section--tight" aria-labelledby="compat-h">
+    <div class="wrap">
+      <div class="callout callout--warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect>
+          <path d="M9 2v2"></path><path d="M15 2v2"></path><path d="M9 20v2"></path><path d="M15 20v2"></path>
+          <path d="M2 9h2"></path><path d="M2 15h2"></path><path d="M20 9h2"></path><path d="M20 15h2"></path>
+        </svg>
+        <div>
+          <h3 id="compat-h" data-en="Apple Silicon only (M1 / M2 / M3 / M4)">僅限 Apple Silicon（M1 / M2 / M3 / M4）</h3>
+          <p data-en-html="This installer bundles a Python runtime compiled for arm64, so it <b>will not run on Intel-based Macs</b>. No working Intel build is currently offered.">
+            這個安裝檔內含為 arm64 編譯的 Python 執行環境，<b>在 Intel 處理器的 Mac 上無法運作</b>。
+            目前沒有提供可用的 Intel 版本。
+          </p>
+          <p data-en-html="Not sure which one you have: open the Apple menu → “About This Mac” and look at the “Chip” row. If it reads <span class=&quot;mono&quot;>Apple M…</span> you're good; if it reads <span class=&quot;mono&quot;>Intel</span>, this build won't work.">
+            不確定自己的機器是哪一種：點左上角 Apple 選單 →「關於這台 Mac」，
+            看「晶片」欄位。顯示 <span class="mono">Apple M…</span> 就可以安裝；
+            顯示 <span class="mono">Intel</span> 則不行。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 安裝 ══════════════ -->
+  <section class="section" id="install" aria-labelledby="install-h">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker" data-en="Install">安裝</span>
+        <h2 id="install-h" data-en="The first launch takes one extra step">第一次開啟需要多按一步</h2>
+        <p data-en="This app isn't signed or notarized with an Apple Developer certificate, so macOS Gatekeeper blocks it first — you may see “cannot be opened because the developer cannot be verified” or “the file is damaged.” The app is not damaged; this is the expected behaviour for unsigned software.">
+          這個 App 沒有經過 Apple 的開發者簽章與公證，所以 macOS 的 Gatekeeper 會先攔下來，
+          可能顯示「無法打開，因為無法驗證開發者」或「檔案已損毀」。App 本身沒有損毀 —— 這是未簽章的預期行為。
+        </p>
+      </div>
+
+      <ol class="steps">
+        <li data-en-html="Open the downloaded <span class=&quot;mono&quot;>.dmg</span> and drag <b>TradingAgentsX Desktop</b> into Applications.">打開下載的 <span class="mono">.dmg</span>，把 <b>TradingAgentsX Desktop</b> 拖進「應用程式」。</li>
+        <li data-en-html="In Applications, <b>Control-click</b> it and choose <kbd>Open</kbd>, then click <kbd>Open</kbd> again in the dialog. (A plain double-click is blocked — only this path offers you the override.)">在「應用程式」裡對它<b>按住 Control 並點一下</b>，選<kbd>打開</kbd>，
+            接著在跳出的對話框再按一次<kbd>打開</kbd>。（直接雙擊會被擋，這個路徑才會給你放行選項。）</li>
+        <li data-en="If it's still blocked, open Terminal and run the line below to strip the quarantine flag, then launch the app again:">若仍被擋，開啟「終端機」執行下面這行移除隔離標記，然後重新開啟 App：</li>
+      </ol>
+
+      <div class="code">
+        <button class="copy" type="button" data-copy="xattr -dr com.apple.quarantine &quot;/Applications/TradingAgentsX Desktop.app&quot;"
+                aria-label="複製指令" data-en-aria-label="Copy command">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path>
+          </svg>
+        </button>
+        <pre><code>xattr -dr com.apple.quarantine "/Applications/TradingAgentsX Desktop.app"</code></pre>
+      </div>
+      <p class="sr-only" id="copy-live" aria-live="polite"></p>
+
+      <div class="callout callout--info mt-8">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="m9 12 2 2 4-4"></path>
+        </svg>
+        <div>
+          <h3 data-en="You can verify the file yourself">下載後可以自行核對檔案</h3>
+          <p data-en-html="Without a signature you can't rely on the system to vouch for the source. To confirm the download is intact and unmodified, run <span class=&quot;mono&quot;>shasum -a 256 &lt;file&gt;</span> in Terminal and check it equals:">
+            因為沒有簽章，你無法靠系統驗證來源。若要確認下載的檔案完整且未被替換，
+            在終端機執行 <span class="mono">shasum -a 256 &lt;檔案&gt;</span>，比對是否等於：
+          </p>
+          <div class="code">
+            <button class="copy" type="button" data-copy="1c4c7e36fd28d6d272df787a8a37465835d6dbcb1b14295a3071cc6d54fdefd4"
+                    aria-label="複製 SHA-256 校驗碼" data-en-aria-label="Copy SHA-256 checksum">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path>
+              </svg>
+            </button>
+            <pre><code>1c4c7e36fd28d6d272df787a8a37465835d6dbcb1b14295a3071cc6d54fdefd4</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 畫面 ══════════════ -->
+  <section class="section" id="shots" aria-labelledby="shots-h">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker" data-en="Real screens">實際畫面</span>
+        <h2 id="shots-h" data-en="From setup to report, all on your machine">從設定到報告，全部在本機</h2>
+        <p data-en="Unretouched screenshots from v0.1.0. The interface supports Traditional Chinese and English, in light and dark themes.">以下是 v0.1.0 的實際操作畫面，未經修飾。介面支援繁體中文與 English、亮色與暗色主題。</p>
+      </div>
+
+      <div class="shots">
+
+        <div class="shot">
+          <figure>
+            <div class="shot-frame">
+              <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span data-en="TradingAgentsX Desktop — Overview">TradingAgentsX Desktop — 總覽</span></div>
+              <img src="assets/1.webp" width="1800" height="1169"
+                   alt="總覽頁：本機報告數、平均耗時 19:06、已設定 9 組金鑰、後端就緒等統計卡片；下方為觀察清單與最近報告列表；右側欄顯示後端狀態、位址 127.0.0.1:51008、PID 與儲存路徑。"
+                   data-en-alt="Overview page: stat cards for local report count, average duration 19:06, 9 configured keys and backend ready; below, a watchlist and a recent-reports table; the right rail shows backend status, address 127.0.0.1:51008, PID and storage path.">
+            </div>
+            <figcaption data-en-html="<b>Overview</b> — report count, average duration, key status and backend health on one page. The right rail states plainly that the backend runs on <span class=&quot;mono&quot;>127.0.0.1</span>, along with the folder your reports actually live in."><b>總覽</b> — 報告數量、平均耗時、金鑰狀態與後端健康度集中在一頁。右側欄直接標出後端跑在 <span class="mono">127.0.0.1</span>，以及報告實際存放的資料夾路徑。</figcaption>
+          </figure>
+        </div>
+
+        <div class="shot">
+          <figure>
+            <div class="shot-frame">
+              <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span data-en="TradingAgentsX Desktop — New analysis">TradingAgentsX Desktop — 新增分析</span></div>
+              <img src="assets/2.webp" width="1800" height="1169" loading="lazy" decoding="async"
+                   alt="新增分析頁：輸入股票代號 TSLA 並自動補全 Tesla, Inc.，可選美股／上市／上櫃；勾選四位分析師；執行模式有快速、平衡、深度三種；下方選擇深度思考模型 Claude Sonnet 5 與快速思考模型 Claude Haiku 4.5。"
+                   data-en-alt="New analysis page: ticker TSLA autocompletes to Tesla, Inc. with US / TWSE / TPEx market options; four analysts are checked; execution mode offers Fast, Balanced and Deep; below, the deep-thinking model is Claude Sonnet 5 and the fast-thinking model Claude Haiku 4.5.">
+            </div>
+            <figcaption data-en-html="<b>New analysis</b> — pick the ticker and a reference date (only data before it is fed in, so you can replay historical scenarios), choose analysts, set research depth. Deep mode runs the full <span class=&quot;mono&quot;>research_depth=5</span>; fast mode skips the debates for noticeably less time and fewer tokens."><b>新增分析</b> — 選標的與基準日（只餵該日期前的資料，可用來回測歷史情境）、挑分析師、決定研究深度。深度模式跑滿 <span class="mono">research_depth=5</span>；快速模式跳過辯論，時間與 token 明顯較少。</figcaption>
+          </figure>
+        </div>
+
+        <div class="shot">
+          <figure>
+            <div class="shot-frame">
+              <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span data-en="TradingAgentsX Desktop — Running">TradingAgentsX Desktop — 執行中</span></div>
+              <img src="assets/3.webp" width="1800" height="1169" loading="lazy" decoding="async"
+                   alt="執行中頁：以 LangGraph 執行 research_depth=5，代理人流程分四階段列出分析師、研究員辯論、風險辯論與交易決策共 12 位代理人的進行狀態；右側為後端輸出日誌，顯示資料供應商 alpha_vantage 呼叫成功並在失敗時改用 yfinance 備援。"
+                   data-en-alt="Running page: LangGraph executing at research_depth=5, with the agent pipeline listing progress across four stages — analysts, researcher debate, risk debate and trading decision, 12 agents in total; the right pane streams backend logs showing a successful alpha_vantage call and a fallback to yfinance on failure.">
+            </div>
+            <figcaption data-en-html="<b>Running</b> — four stages and 12 agents, all legible at a glance. The right pane is the raw backend log, down to details like “primary data provider failed, switching to the fallback.” Not a black box."><b>執行中</b> — 四個階段、12 位代理人的流程一目了然。右側是後端原始日誌，連「主要供應商取不到就改用備援」這種細節都看得到，不是黑盒子。</figcaption>
+          </figure>
+        </div>
+
+        <div class="shot">
+          <figure>
+            <div class="shot-frame">
+              <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span data-en="TradingAgentsX Desktop — Report">TradingAgentsX Desktop — 報告</span></div>
+              <img src="assets/4.webp" width="1800" height="1169" loading="lazy" decoding="async"
+                   alt="報告頁：TSLA 最終判斷為 SELL，區間漲跌 -3.86%；多空辯論區並排顯示多方研究員的核心論點與空方研究員的核心警示；風險辯論區並列激進派、保守派、中立派三種立場；右側欄列出執行參數、價格區間與章節產出，並註明報告由 LLM 代理人生成僅供研究參考。"
+                   data-en-alt="Report page: TSLA final verdict SELL with a period change of -3.86%; the bull/bear section places the bull researcher's core thesis beside the bear researcher's core warning; the risk section lines up aggressive, conservative and neutral stances; the right rail lists run parameters, price range and section outputs, noting the report is LLM-generated and for research reference only.">
+            </div>
+            <figcaption data-en-html="<b>Report</b> — the verdict isn't just one word. Bull and bear arguments sit side by side, and the aggressive / conservative / neutral risk assessments line up next to each other, so you can see why they disagree instead of only receiving a conclusion."><b>報告</b> — 判斷結果不只給一個字。多方與空方的完整論證並排、激進／保守／中立三派風險評估並列，你可以看它們為什麼吵起來，而不是只收到結論。</figcaption>
+          </figure>
+        </div>
+
+        <div class="shot">
+          <figure>
+            <div class="shot-frame">
+              <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span data-en="TradingAgentsX Desktop — Settings · Appearance">TradingAgentsX Desktop — 設定 · 外觀</span></div>
+              <img src="assets/5.webp" width="1800" height="1169" loading="lazy" decoding="async"
+                   alt="設定的外觀分頁：語言可選繁體中文或 English，介面與報告語言為同一設定；主題可選跟隨系統、固定亮色或固定暗色；下方預覽區展示 BUY／SELL／HOLD 標籤與各種按鈕狀態。"
+                   data-en-alt="Settings, Appearance tab: language offers Traditional Chinese or English as a single setting covering both interface and reports; theme offers follow-system, always-light or always-dark; a preview below shows BUY / SELL / HOLD badges and various button states.">
+            </div>
+            <figcaption data-en-html="<b>Settings · Appearance</b> — switching language changes both the interface and the language reports are written in. The theme can follow the system: changing your macOS appearance is reflected immediately, no restart."><b>設定 · 外觀</b> — 語言切換同時改變介面與報告輸出語言。主題支援跟隨系統，切換 macOS 外觀設定會立即反映、不需重啟。</figcaption>
+          </figure>
+        </div>
+
+        <div class="shot">
+          <figure>
+            <div class="shot-frame">
+              <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span data-en="TradingAgentsX Desktop — Settings · API keys">TradingAgentsX Desktop — 設定 · API 金鑰</span></div>
+              <img src="assets/6.webp" width="1800" height="1169" loading="lazy" decoding="async"
+                   alt="設定的 API 金鑰分頁：頂端說明金鑰以 macOS 鑰匙圈、Windows DPAPI 或 Linux libsecret 加密後寫入本機檔案；下方依序列出 Anthropic、OpenAI、Google Gemini、xAI Grok、DeepSeek、Qwen 與自訂 OpenAI 相容端點的金鑰欄位，每欄都有儲存與驗證按鈕並顯示末四碼。"
+                   data-en-alt="Settings, API keys tab: a banner explains keys are encrypted with the macOS keychain, Windows DPAPI or Linux libsecret before being written to a local file; below are key fields for Anthropic, OpenAI, Google Gemini, xAI Grok, DeepSeek, Qwen and a custom OpenAI-compatible endpoint, each with save and verify buttons showing only the last four characters.">
+            </div>
+            <figcaption data-en-html="<b>Settings · API keys</b> — supports Anthropic, OpenAI, Gemini, xAI Grok, DeepSeek, Qwen and any OpenAI-compatible endpoint (which can point at a local model). Each key can be verified on its own, and the interface only ever shows the last four characters."><b>設定 · API 金鑰</b> — 支援 Anthropic、OpenAI、Gemini、xAI Grok、DeepSeek、Qwen，以及任何 OpenAI 相容端點（可指向本機模型）。每組金鑰都能單獨驗證，介面只顯示末四碼。</figcaption>
+          </figure>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 流程 ══════════════ -->
+  <section class="section" aria-labelledby="pipe-h">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker" data-en="Agent pipeline">代理人流程</span>
+        <h2 id="pipe-h" data-en="Four stages, 12 agents">四個階段，12 位代理人</h2>
+        <p data-en="Orchestrated with LangGraph. How many agents actually get created depends on the analysts you check and the research depth you pick — unchecked ones are never built and never spend your tokens.">由 LangGraph 編排。實際建立的代理人數量取決於你勾選的分析師與研究深度 —— 沒勾的不會被建立，也不會花你的 token。</p>
+      </div>
+
+      <div class="pipe">
+        <div class="pipe-row">
+          <span class="pipe-n" aria-hidden="true">1</span>
+          <div>
+            <h3 data-en="Analysts · in parallel">分析師 · 平行執行</h3>
+            <p data-en="Four angles gather evidence at once, none waiting on the others.">四個面向同時蒐證，彼此不等待。</p>
+            <p class="roles" data-en="Market (MACD / RSI / Bollinger) · News (Google News and macro) · Social sentiment (Reddit) · Fundamentals (filings, valuation, peer comparison)">市場（MACD / RSI / 布林通道）· 新聞（Google News 與總體）· 社群情緒（Reddit）· 基本面（財報、估值與產業比較）</p>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <span class="pipe-n" aria-hidden="true">2</span>
+          <div>
+            <h3 data-en="Researcher debate">研究員辯論</h3>
+            <p data-en="Bull and bear each build a case and rebut the other, then a manager condenses it into an investment plan.">多空各自建構論點並互相反駁，再由主管收斂成投資計畫。</p>
+            <p class="roles" data-en="Bull researcher · Bear researcher · Research manager">多方研究員 · 空方研究員 · 研究主管</p>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <span class="pipe-n" aria-hidden="true">3</span>
+          <div>
+            <h3 data-en="Risk debate">風險辯論</h3>
+            <p data-en="Three risk appetites check each other against the same plan, so no single stance drives the conclusion.">三種風險偏好對同一份計畫互相制衡，避免單一立場主導結論。</p>
+            <p class="roles" data-en="Aggressive · Conservative · Neutral · Risk manager">激進派 · 保守派 · 中立派 · 風險主管</p>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <span class="pipe-n" aria-hidden="true">4</span>
+          <div>
+            <h3 data-en="Trading decision">交易決策</h3>
+            <p data-en="Everything above is folded into a single actionable call.">綜合以上全部產出，收斂成單一可執行判斷。</p>
+            <p class="roles" data-en="Trader → BUY / SELL / HOLD">交易員 → BUY / SELL / HOLD</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 特色 ══════════════ -->
+  <section class="section" aria-labelledby="feat-h">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker" data-en="Why run it locally">為什麼跑在本機</span>
+        <h2 id="feat-h" data-en="Your keys, your data, your machine">你的金鑰、你的資料、你的機器</h2>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <h3 data-en="Keys never leave your machine">金鑰不離開本機</h3>
+          <p data-en="Encrypted with the macOS keychain before being written to a local file, and decrypted in the main process only at the moment a request goes out. The interface never sees the plaintext, and nothing passes through a relay server.">以 macOS 鑰匙圈加密後寫入本機檔案，只在送出請求的那一刻於主行程解密。介面本身拿不到明文，也不經過任何中繼伺服器。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path>
+            </svg>
+          </div>
+          <h3 data-en="Reports stay on your disk">報告存在你的磁碟</h3>
+          <p data-en="Every analysis writes one JSON file into your own Documents folder, and you can reveal it in Finder directly. No cloud sync, no account.">每次分析輸出一份 JSON 到你自己的「文件」資料夾，可以直接開啟所在位置。沒有雲端同步，也沒有帳號。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M4.9 4.9l2.9 2.9"></path>
+              <path d="M16.2 16.2l2.9 2.9"></path><path d="M2 12h4"></path><path d="M18 12h4"></path>
+              <path d="M4.9 19.1l2.9-2.9"></path><path d="M16.2 7.8l2.9-2.9"></path>
+            </svg>
+          </div>
+          <h3 data-en="No Python install needed">不需要安裝 Python</h3>
+          <p data-en="The installer bundles a complete Python runtime and every backend dependency. No cloning the repo, no conda, no pip install.">安裝檔內含完整的 Python 執行環境與所有後端依賴。不用 clone repo、不用 conda、不用 pip install。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10"></path><path d="M12 2v10l8 4"></path>
+            </svg>
+          </div>
+          <h3 data-en="You set the cost">自己決定成本</h3>
+          <p data-en="Three research depths map directly to time and token spend. Fast mode skips the debates, deep mode runs all five rounds — the trade-off is yours.">三段研究深度直接對應時間與 token 花費。快速模式跳過辯論、深度模式跑滿五輪，你自己權衡。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle>
+            </svg>
+          </div>
+          <h3 data-en="Swappable models">換得動模型</h3>
+          <p data-en="Deep-thinking and fast-thinking models are set separately, mixed freely across six providers, or pointed at an OpenAI-compatible endpoint to use a local model.">深度思考與快速思考可分開指定，六家供應商任意搭配，也能填 OpenAI 相容端點接本機模型。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"></path><path d="m7 15 4-4 3 3 5-5"></path>
+            </svg>
+          </div>
+          <h3 data-en="Replay historical scenarios">可回測歷史情境</h3>
+          <p data-en="Set a reference date and the agents only ever see data from before it — so you can take a past moment and check what the pipeline would have concluded.">指定分析基準日，代理人只會看到那天以前的資料 —— 可以拿過去的時點驗證流程會做出什麼判斷。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 系統需求 ══════════════ -->
+  <section class="section" aria-labelledby="req-h">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker" data-en="Before you start">開始之前</span>
+        <h2 id="req-h" data-en="Requirements">系統需求</h2>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <caption class="sr-only" data-en="Requirements and caveats for TradingAgentsX Desktop 0.1.0">TradingAgentsX Desktop 0.1.0 的系統需求與注意事項</caption>
+          <thead>
+            <tr>
+              <th scope="col" data-en="Item">項目</th>
+              <th scope="col" data-en="Requirement">需求</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-en="Processor">處理器</td>
+              <td data-en-html="Apple Silicon (M series). <b>Intel Macs are not supported.</b>">Apple Silicon（M 系列）。<b>不支援 Intel Mac。</b></td>
+            </tr>
+            <tr>
+              <td data-en="OS">系統</td>
+              <td data-en="macOS 11 Big Sur or newer">macOS 11 Big Sur 或更新版本</td>
+            </tr>
+            <tr>
+              <td data-en="Download size">下載大小</td>
+              <td class="tnum">369 MB</td>
+            </tr>
+            <tr>
+              <td data-en="Installed size">安裝後占用</td>
+              <td class="tnum" data-en="About 1 GB (includes the bundled Python runtime)">約 1 GB（含內建 Python 執行環境）</td>
+            </tr>
+            <tr>
+              <td data-en="LLM key">LLM 金鑰</td>
+              <td data-en="You need an API key from at least one provider; you pay that provider directly">需自備至少一家供應商的 API 金鑰，費用由你直接付給供應商</td>
+            </tr>
+            <tr>
+              <td data-en="Network">網路</td>
+              <td data-en="Required — for LLM calls and for fetching price and news data">需要 —— 用於呼叫 LLM 與抓取行情、新聞資料</td>
+            </tr>
+            <tr>
+              <td data-en="Signing">簽章狀態</td>
+              <td data-en-html="Unsigned and unnotarized; the first launch needs a manual override (<a href=&quot;#install&quot;>see above</a>)">未簽章、未公證，首次開啟需手動放行（<a href="#install">見上方說明</a>）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 收尾 CTA ══════════════ -->
+  <section class="section section--center" aria-labelledby="end-h">
+    <div class="wrap">
+      <h2 id="end-h" class="h2" data-en="Ready when you are">準備好了就開始</h2>
+      <p class="lede" data-en="Download it, drag it into Applications, paste in one API key — that's enough to run your first analysis.">下載、拖進「應用程式」、填一組 API 金鑰，就可以跑第一份分析。</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="TradingAgentsX%20Desktop-0.1.0-arm64.dmg" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M4 21h16"></path>
+          </svg>
+          <span data-en="Download 0.1.0 for Apple Silicon">下載 0.1.0 for Apple Silicon</span>
+        </a>
+      </div>
+      <p class="dl-meta tnum"><span>arm64 · 369&nbsp;MB · macOS 11+</span></p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="disclaimer">
+      <p data-en-html="<b>Disclaimer</b> — every report is generated by LLM agents, for research and learning reference only, and <b>does not constitute investment advice</b>. Agents can cite wrong data or reason incorrectly; any investment decision and its consequences are yours alone.">
+        <b>免責聲明</b> — 所有報告皆由 LLM 代理人生成，僅供研究與學習參考，<b>不構成投資建議</b>。
+        代理人可能引用錯誤資料或做出錯誤推論，任何投資決策與其後果由你自行負責。
+      </p>
+    </div>
+    <div class="foot-in">
+      <p data-en="TradingAgentsX Desktop 0.1.0 · both the interface and the backend are open source. This page collects no tracking data.">
+        TradingAgentsX Desktop 0.1.0 · 介面與後端皆為開源專案。
+        本頁未收集任何追蹤資料。
+      </p>
+      <div class="foot-links">
+        <a href="https://github.com/MarkLo127/TradingAgentsX_Desktop" data-en="Desktop source">Desktop 原始碼</a>
+        <a href="https://github.com/MarkLo127/TradingAgentsX" data-en="Analysis engine">分析引擎</a>
+        <a href="#install" data-en="Install guide">安裝說明</a>
+        <a href="#top" data-en="Back to top">回到頂端</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   主題：系統 / 亮色 / 暗色
+   ───────────────────────────────────────────────────────────── */
+(function(){
+  var root = document.documentElement;
+  var btns = document.querySelectorAll('[data-theme-set]');
+
+  function current(){
+    var t = root.getAttribute('data-theme');
+    return (t === 'light' || t === 'dark') ? t : 'system';
+  }
+  function paint(){
+    var c = current();
+    btns.forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-set') === c));
+    });
+  }
+  function apply(mode){
+    if (mode === 'system') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', mode);
+    try { localStorage.setItem('tax-theme', mode); } catch (e) {}
+    paint();
+  }
+
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){ apply(b.getAttribute('data-theme-set')); });
+  });
+  paint();
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   語言：中文（HTML 原生內容）↔ 英文（data-en* 屬性）
+   中文寫在 HTML 裡，所以停用 JS 時頁面仍然完整可讀。
+   ───────────────────────────────────────────────────────────── */
+(function(){
+  var root = document.documentElement;
+  var btn = document.getElementById('lang-toggle');
+  var label = document.getElementById('lang-label');
+
+  /* 首次切換前先把中文原文存起來，才能切回去 */
+  var PAIRS = [
+    { attr:'data-en',            set:function(el,v){ el.textContent = v; },
+                                 get:function(el){ return el.textContent; } },
+    { attr:'data-en-html',       set:function(el,v){ el.innerHTML = v; },
+                                 get:function(el){ return el.innerHTML; } },
+    { attr:'data-en-alt',        set:function(el,v){ el.setAttribute('alt', v); },
+                                 get:function(el){ return el.getAttribute('alt'); } },
+    { attr:'data-en-title',      set:function(el,v){ el.setAttribute('title', v); },
+                                 get:function(el){ return el.getAttribute('title'); } },
+    { attr:'data-en-aria-label', set:function(el,v){ el.setAttribute('aria-label', v); },
+                                 get:function(el){ return el.getAttribute('aria-label'); } },
+    { attr:'data-en-content',    set:function(el,v){ el.setAttribute('content', v); },
+                                 get:function(el){ return el.getAttribute('content'); } }
+  ];
+
+  /* <meta name="description"> 用 content 屬性，改走 data-en → content */
+  var meta = document.querySelector('meta[name="description"]');
+  if (meta && meta.hasAttribute('data-en')) {
+    meta.setAttribute('data-en-content', meta.getAttribute('data-en'));
+    meta.removeAttribute('data-en');
+  }
+
+  var stash = [];
+  PAIRS.forEach(function(p){
+    document.querySelectorAll('[' + p.attr + ']').forEach(function(el){
+      stash.push({ el:el, p:p, zh:p.get(el), en:el.getAttribute(p.attr) });
+    });
+  });
+
+  function render(lang){
+    var en = lang === 'en';
+    stash.forEach(function(s){ s.p.set(s.el, en ? s.en : s.zh); });
+    root.setAttribute('lang', en ? 'en' : 'zh-Hant');
+    if (en) root.setAttribute('data-lang','en'); else root.removeAttribute('data-lang');
+    /* 按鈕顯示的是「切換到哪個語言」，不是目前語言 */
+    if (label) label.textContent = en ? '中文' : 'EN';
+    if (btn) btn.setAttribute('aria-label', en ? 'Switch to Chinese' : '切換為英文');
+    try { localStorage.setItem('tax-lang', en ? 'en' : 'zh'); } catch (e) {}
+  }
+
+  /* head 的 inline script 已依 localStorage 設好 data-lang，這裡補齊文字 */
+  if (root.getAttribute('data-lang') === 'en') render('en');
+
+  if (btn) {
+    btn.addEventListener('click', function(){
+      render(root.getAttribute('data-lang') === 'en' ? 'zh' : 'en');
+    });
+  }
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   非 macOS 提示 —— 只在明確不是 Mac 時顯示，避免誤判
+   ───────────────────────────────────────────────────────────── */
+(function(){
+  var ua = navigator.userAgent || '';
+  var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  var isMac = /Mac/i.test(plat) || /Macintosh|Mac OS X/i.test(ua);
+  var isIOS = /iPhone|iPad|iPod/i.test(ua);
+  if (!isMac || isIOS) {
+    var n = document.getElementById('os-notice');
+    if (n) n.hidden = false;
+  }
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   複製按鈕 —— 成功後改圖示並透過 aria-live 通知螢幕閱讀器
+   ───────────────────────────────────────────────────────────── */
+(function(){
+  var live = document.getElementById('copy-live');
+  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" '
+            + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="m20 6-11 11-5-5"></path></svg>';
+
+  document.querySelectorAll('.copy').forEach(function(btn){
+    var original = btn.innerHTML;
+    btn.addEventListener('click', function(){
+      var text = btn.getAttribute('data-copy') || '';
+      var en = document.documentElement.getAttribute('data-lang') === 'en';
+      var done = function(){
+        btn.innerHTML = CHECK;
+        btn.dataset.done = '1';
+        if (live) live.textContent = en ? 'Copied to clipboard' : '已複製到剪貼簿';
+        setTimeout(function(){
+          btn.innerHTML = original;
+          delete btn.dataset.done;
+          if (live) live.textContent = '';
+        }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+      function fallback(){
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch(e){
+          if (live) live.textContent = en ? 'Copy failed — select manually' : '複製失敗，請手動選取';
+        }
+        document.body.removeChild(ta);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1155,7 +1155,9 @@ a:hover {
   font-size: 15px;
   line-height: 1.72;
   color: var(--prose);
-  max-width: 74ch;
+  /* 74ch 是以 latin "0" 字寬計算的，對 CJK 內容只有約 37 字／行，
+     在寬視窗下會在右側留下大片空白。中日韓舒適行長約 40–50 字。 */
+  max-width: 62em;
 }
 .prose p {
   margin: 0 0 15px;
@@ -1178,24 +1180,26 @@ a:hover {
 .prose > :first-child {
   margin-top: 0;
 }
+/* li 不能用 display:flex —— 那會讓每個元素子節點（例如 **粗體標籤**）各自成為
+   flex item 被獨立擠壓，導致「空手者」被折成「空手／者」。用標準清單流 + ::marker，
+   行內文字才會正常連續排版。::before 也不能一律加圓點，否則 ol 會失去數字。 */
 .prose ul,
 .prose ol {
   margin: 0 0 15px;
-  padding-left: 4px;
+  padding-left: 1.35em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
 }
 .prose li {
-  display: flex;
-  gap: 10px;
   margin-bottom: 7px;
 }
-.prose li::before {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--text-disabled);
-  margin-top: 10px;
-  flex-shrink: 0;
+.prose li::marker {
+  color: var(--text-disabled);
+  font-size: 0.9em;
 }
 .prose strong {
   color: var(--text);
@@ -1228,6 +1232,40 @@ a:hover {
   font-weight: 600;
   color: var(--text);
 }
+/* 辯論卡片等窄欄位用的緊湊版：字級與行距貼齊原本的 .side-body，
+   標題階層壓縮，且不設 max-width（欄寬本身已經很窄）。 */
+.prose-compact {
+  font-size: 12.5px;
+  line-height: 1.65;
+  max-width: none;
+}
+.prose-compact p {
+  margin: 0 0 10px;
+}
+.prose-compact h1,
+.prose-compact h2,
+.prose-compact h3,
+.prose-compact h4 {
+  font-size: 12.5px;
+  margin: 14px 0 6px;
+}
+.prose-compact h1 {
+  font-size: 13.5px;
+}
+.prose-compact h2 {
+  font-size: 13px;
+}
+.prose-compact ul,
+.prose-compact ol {
+  margin: 0 0 10px;
+}
+.prose-compact li {
+  margin-bottom: 4px;
+}
+.prose-compact > :last-child {
+  margin-bottom: 0;
+}
+
 .prose blockquote {
   border-left: 2px solid var(--border-strong);
   padding: 2px 0 2px 14px;
@@ -1306,12 +1344,11 @@ a:hover {
 }
 .side-body {
   padding: 12px 13px;
-  font-size: 12.5px;
-  line-height: 1.65;
   color: var(--text-dim);
   max-height: 320px;
   overflow-y: auto;
-  white-space: pre-wrap;
+  /* 內容改由 <Markdown compact> 渲染，不再是純文字，
+     故移除 white-space: pre-wrap（會讓 Markdown 的段落間距重複疊加）。 */
 }
 
 /* -------------------------------------------------------------- 工具類 */

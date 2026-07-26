@@ -278,7 +278,9 @@ export function Report() {
                       <Icon name="trendUp" size="sm" />
                       {t('多方研究員', 'Bull Researcher')}
                     </div>
-                    <div className="side-body">{bull}</div>
+                    <div className="side-body">
+                      <Markdown compact>{bull}</Markdown>
+                    </div>
                   </div>
                 )}
                 {bear && (
@@ -287,7 +289,9 @@ export function Report() {
                       <Icon name="trendDown" size="sm" />
                       {t('空方研究員', 'Bear Researcher')}
                     </div>
-                    <div className="side-body">{bear}</div>
+                    <div className="side-body">
+                      <Markdown compact>{bear}</Markdown>
+                    </div>
                   </div>
                 )}
               </div>
@@ -306,7 +310,9 @@ export function Report() {
                       <Icon name="zap" size="sm" />
                       {t('激進派', 'Aggressive')}
                     </div>
-                    <div className="side-body">{risky}</div>
+                    <div className="side-body">
+                      <Markdown compact>{risky}</Markdown>
+                    </div>
                   </div>
                 )}
                 {safe && (
@@ -315,7 +321,9 @@ export function Report() {
                       <Icon name="shield" size="sm" />
                       {t('保守派', 'Conservative')}
                     </div>
-                    <div className="side-body">{safe}</div>
+                    <div className="side-body">
+                      <Markdown compact>{safe}</Markdown>
+                    </div>
                   </div>
                 )}
                 {neutral && (
@@ -324,7 +332,9 @@ export function Report() {
                       <Icon name="scale" size="sm" />
                       {t('中立派', 'Neutral')}
                     </div>
-                    <div className="side-body">{neutral}</div>
+                    <div className="side-body">
+                      <Markdown compact>{neutral}</Markdown>
+                    </div>
                   </div>
                 )}
               </div>

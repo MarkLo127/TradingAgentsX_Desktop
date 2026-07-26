@@ -6,7 +6,11 @@
 #   resources/appsrc/     —— backend/ 原始碼（tradingagents 已安裝進 pybackend 的 site-packages）
 # electron-builder 會把這兩個資料夾放進 App 的 Resources；backend.ts 會自動偵測並使用。
 #
-# 需求：uv（https://docs.astral.sh/uv/）。在 desktop 專案目錄執行：
+# 後端原始碼（backend/、tradingagents/）不在這個 repo 裡，會自動取得：本機有並列的
+# TradingAgentsX 就用它，沒有就從 GitHub 下載 .tax-version 指定的 commit。詳見下方尋找順序。
+#
+# 需求：uv（https://docs.astral.sh/uv/）；本機沒有 TradingAgentsX 時另需 curl。
+# 在 desktop 專案目錄執行：
 #   ./scripts/build-backend.sh                        # 精簡版（約 1GB）；本機 embedding 走
 #                                                     # ChromaDB 內建 ONNX（無 torch、無金鑰，首次下載 ~80MB）
 #   WITH_LOCAL_EMBEDDING=1 ./scripts/build-backend.sh # 完整版（+torch ~2GB）：本機 embedding 用
@@ -15,12 +19,62 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"     # desktop 專案目錄
-REPO="$(cd "$HERE/.." && pwd)"               # TradingAgentsX repo 根目錄
 OUT="$HERE/resources"
 PYVER="${PYVER:-3.12}"
+CACHE="$HERE/.cache"
 
 command -v uv >/dev/null || { echo "✗ 需要 uv：https://docs.astral.sh/uv/"; exit 1; }
-[ -f "$REPO/backend/__main__.py" ] || { echo "✗ 在 $REPO 找不到 backend/"; exit 1; }
+
+# ── Python 後端原始碼的來源 ──────────────────────────────────────────────
+# 這個 repo 不內含 backend/ 與 tradingagents/（它們在 TradingAgentsX，另一個 repo，
+# 且更新頻繁 —— 複製一份進來只會導致兩邊漂移）。取得順序：
+#   1. $TAX_REPO                     明確指定
+#   2. $HERE/..                      desktop 巢狀在 repo 內的擺法
+#   3. $HERE/../TradingAgentsX       兩個 repo 並列的擺法
+#   4. ${HERE%_Desktop}              Foo_Desktop 與 Foo 並列
+#   5. $CACHE/TradingAgentsX-<ref>   先前下載的快取
+#   6. 從 GitHub 下載 tarball（pin 在 .tax-version）
+# 開發者把兩個 repo 並列放，改 Python 立刻生效；只想建置的人什麼都不用準備。
+TAX_SLUG="${TAX_SLUG:-MarkLo127/TradingAgentsX}"
+TAX_REF="${TAX_REF:-$(tr -d ' \t\r\n' < "$HERE/.tax-version" 2>/dev/null || echo main)}"
+
+find_repo() {
+  local cand
+  for cand in "${TAX_REPO:-}" "$HERE/.." "$HERE/../TradingAgentsX" "${HERE%_Desktop}" \
+              "$CACHE/TradingAgentsX-$TAX_REF"; do
+    # backend/ 會 import tradingagents/，兩者必須成對存在才算可用
+    [ -n "$cand" ] && [ -f "$cand/backend/__main__.py" ] && [ -d "$cand/tradingagents" ] || continue
+    (cd "$cand" && pwd)
+    return 0
+  done
+  return 1
+}
+
+fetch_repo() {
+  command -v curl >/dev/null || { echo "✗ 需要 curl 才能下載後端原始碼"; exit 1; }
+  local url="https://github.com/$TAX_SLUG/archive/$TAX_REF.tar.gz"
+  local dest="$CACHE/TradingAgentsX-$TAX_REF"
+  local tmp; tmp="$(mktemp -d)"
+  # 注意：全形字元緊接 $VAR 會被 bash 3.2（macOS 內建）吃進變數名，故一律加大括號
+  echo "==> 本機找不到 TradingAgentsX，改從 GitHub 取得（ref: ${TAX_REF}）"
+  echo "    $url"
+  curl -fsSL "$url" -o "$tmp/src.tar.gz" || {
+    rm -rf "$tmp"
+    echo "✗ 下載失敗：$url"
+    echo "  若 .tax-version 指向的 commit 已不存在，請更新它；或用 TAX_REF=main 取最新"
+    exit 1
+  }
+  rm -rf "$dest"; mkdir -p "$dest"
+  # GitHub tarball 頂層是 <repo>-<ref>/，strip 掉才會直接攤成 backend/、tradingagents/
+  tar -xzf "$tmp/src.tar.gz" -C "$dest" --strip-components=1
+  rm -rf "$tmp"
+}
+
+REPO="$(find_repo)" || { fetch_repo; REPO="$(find_repo)"; }
+[ -n "${REPO:-}" ] || {
+  echo "✗ 取得後端原始碼失敗：$CACHE/TradingAgentsX-$TAX_REF 缺少 backend/ 或 tradingagents/"
+  exit 1
+}
 
 echo "==> repo:   $REPO"
 echo "==> output: $OUT"

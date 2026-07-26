@@ -27,3 +27,13 @@ dist-ssr
 resources/pybackend/
 resources/appsrc/
 release/
+
+# 本機找不到 TradingAgentsX 時，build-backend.sh 下載的後端原始碼快取
+.cache/
+
+# 安裝檔一律走 GitHub Release，不進 git。
+# GitHub 對版本庫內單一檔案的硬限制是 100 MB，而 DMG 約 370 MB —— push 會被直接拒絕。
+# Release 資產的上限是 2 GB，才是散佈二進位檔的正確管道。
+*.dmg
+*.zip
+*.blockmap

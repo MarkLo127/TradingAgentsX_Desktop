@@ -333,9 +333,14 @@ export function Sparkline({
 
 /* ------------------------------------------------------------- Markdown */
 
-export function Markdown({ children }: { children: string }) {
+/**
+ * 代理人輸出是 Markdown（# 標題、**粗體**、- 清單），必須渲染而不是當純文字印出來，
+ * 否則語法會直接外洩到介面上。compact 用於辯論卡片這類窄欄位。
+ * 注意：不啟用 rehype-raw —— LLM 產出的內容不應允許原始 HTML。
+ */
+export function Markdown({ children, compact }: { children: string; compact?: boolean }) {
   return (
-    <div className="prose">
+    <div className={compact ? 'prose prose-compact' : 'prose'}>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   )
