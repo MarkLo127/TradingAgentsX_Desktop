@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "echo 'skip: 靜態站，不需要 node_modules'",
-  "buildCommand": "echo 'skip: docs/ 已是成品，不需要建置'",
+  "installCommand": "echo skip-install-static-site",
+  "buildCommand": "echo skip-build-docs-is-prebuilt",
   "outputDirectory": "docs",
   "cleanUrls": true,
   "headers": [
